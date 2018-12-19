@@ -1,19 +1,24 @@
 extern crate bytecount;
+#[cfg(not(feature = "cargo-miri"))]
 #[macro_use]
 extern crate quickcheck;
 extern crate rand;
 
+#[cfg(not(feature = "cargo-miri"))]
 use std::iter;
 use bytecount::{
     count, naive_count,
     num_chars, naive_num_chars,
 };
+#[cfg(not(feature = "cargo-miri"))]
 use rand::Rng;
 
+#[cfg(not(feature = "cargo-miri"))]
 fn random_bytes(len: usize) -> Vec<u8> {
     rand::thread_rng().gen_iter::<u8>().take(len).collect::<Vec<_>>()
 }
 
+#[cfg(not(feature = "cargo-miri"))]
 quickcheck! {
     fn check_count_correct(x: (Vec<u8>, u8)) -> bool {
         let (haystack, needle) = x;
@@ -23,11 +28,15 @@ quickcheck! {
 
 #[test]
 fn check_count_large() {
+    #[cfg(not(feature = "cargo-miri"))]
     let haystack = vec![0u8; 10_000_000];
+    #[cfg(feature = "cargo-miri")]
+    let haystack = vec![0u8; 1_000];
     assert_eq!(naive_count(&haystack, 0), count(&haystack, 0));
     assert_eq!(naive_count(&haystack, 1), count(&haystack, 1));
 }
 
+#[cfg(not(feature = "cargo-miri"))]
 #[test]
 fn check_count_large_rand() {
     let haystack = random_bytes(100_000);
@@ -50,6 +59,7 @@ fn check_count_overflow() {
     assert_eq!(count(&haystack, needle), naive_count(&haystack, needle));
 }
 
+#[cfg(not(feature = "cargo-miri"))]
 quickcheck! {
     fn check_num_chars_correct(haystack: Vec<u8>) -> bool {
         num_chars(&haystack) == naive_num_chars(&haystack)
@@ -58,7 +68,10 @@ quickcheck! {
 
 #[test]
 fn check_num_chars_large() {
+    #[cfg(not(feature = "cargo-miri"))]
     let haystack = vec![0u8; 10_000_000];
+    #[cfg(feature = "cargo-miri")]
+    let haystack = vec![0u8; 1_000];
     assert_eq!(naive_num_chars(&haystack), num_chars(&haystack));
     assert_eq!(naive_num_chars(&haystack), num_chars(&haystack));
 }
