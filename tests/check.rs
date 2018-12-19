@@ -4,18 +4,21 @@ extern crate bytecount;
 extern crate quickcheck;
 extern crate rand;
 
-#[cfg(not(feature = "cargo-miri"))]
 use std::iter;
 use bytecount::{
     count, naive_count,
     num_chars, naive_num_chars,
 };
-#[cfg(not(feature = "cargo-miri"))]
 use rand::Rng;
+#[cfg(feature = "cargo-miri")]
+use rand::SeedableRng;
 
-#[cfg(not(feature = "cargo-miri"))]
 fn random_bytes(len: usize) -> Vec<u8> {
-    rand::thread_rng().gen_iter::<u8>().take(len).collect::<Vec<_>>()
+    #[cfg(not(feature = "cargo-miri"))]
+    let mut rng = rand::thread_rng();
+    #[cfg(feature = "cargo-miri")]
+    let mut rng = rand::StdRng::from_seed(&[0xdeadcafe]);
+    rng.gen_iter::<u8>().take(len).collect::<Vec<_>>()
 }
 
 #[cfg(not(feature = "cargo-miri"))]
@@ -36,10 +39,12 @@ fn check_count_large() {
     assert_eq!(naive_count(&haystack, 1), count(&haystack, 1));
 }
 
-#[cfg(not(feature = "cargo-miri"))]
 #[test]
 fn check_count_large_rand() {
+    #[cfg(not(feature = "cargo-miri"))]
     let haystack = random_bytes(100_000);
+    #[cfg(feature = "cargo-miri")]
+    let haystack = random_bytes(1_000);
     for i in (0..255).chain(iter::once(255)) {
         assert_eq!(naive_count(&haystack, i), count(&haystack, i));
     }
